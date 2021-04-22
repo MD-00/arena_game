@@ -1,1 +1,2 @@
-# arena_game
+# flappyNEAT 
+# simple bird game with NEAT implementation
