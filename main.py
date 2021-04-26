@@ -12,18 +12,27 @@ icon = pg.image.load("IMG/icon.png")
 pg.display.set_icon(icon)
 background = pg.image.load('IMG/background.png')
 
-#defining space using pymunk
+#defining Bird
 
-space = pymunk.Space()
-space.gravity = 0, -1000
+class Bird:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.tilt = 0
+        self.vel = 0
+        self.height = self.y
 
-body = pymunk.Body(1, 1666)
-body.position = 50, 100
+    def jump(self):
+        self.vel = -10.5
+        self.height = self.y
 
-poly = pymunk.Poly.create_box(body)
-space.add(body, poly)
+    # def move(self):
 
 
+class Pipe:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 # game loop
 gameOn = True
@@ -34,6 +43,5 @@ while gameOn:
         if event.type == pg.QUIT or keys_pressed[pg.K_ESCAPE]:
             gameOn = False
 
-    space.step(0.02)
 
     pg.display.update()
