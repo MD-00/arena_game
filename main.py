@@ -2,6 +2,7 @@ import pygame as pg
 import setup
 import os
 import random
+import neat
 
 BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
@@ -152,7 +153,7 @@ class Pipe:
         return False
 
 
-def main():
+def fitness_fun(genomes, config):
     bird = Bird(230, 350)
     pipes = [Pipe(700)]
 
@@ -200,4 +201,19 @@ def main():
     quit()
 
 
-main()
+fitness_fun()
+
+def run(config_path):
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+
+    population = neat.Population(config)
+    population.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    population.add_reporter(stats)
+
+    winner = population.run(fitness_fun, 50)
+
+if __name__ == "__main__":
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "neatconfig.txt")
+    run(config_path)
