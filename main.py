@@ -201,7 +201,7 @@ def fitness_fun(genomes, config):
             output = nets[x].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
             if output[0] > 0.45:
                 bird.jump()
-
+            # mozna zmienic na 0.5
 
 
         add_pipe = False
@@ -229,7 +229,7 @@ def fitness_fun(genomes, config):
             score += 1
             for g in ge:
                 # można dać 10 fitnessu
-                g.fitness += 10
+                g.fitness += 5
 
             pipes.append(Pipe(600))
 
