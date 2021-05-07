@@ -111,8 +111,8 @@ def draw_window(window, birds, pipes, score):
 
 
 class Pipe:
-    gap = 177
-    vel = 9
+    gap = 180
+    vel = 5
 
     def __init__(self, x):
         self.x = x
@@ -199,7 +199,7 @@ def fitness_fun(genomes, config):
             # ^^ tą wartość trzeba zmienić
 
             output = nets[x].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
-            if output[0] > 0.45:
+            if output[0] > 0.5:
                 bird.jump()
             # mozna zmienic na 0.5
 
