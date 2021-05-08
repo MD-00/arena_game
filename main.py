@@ -3,6 +3,7 @@ import setup
 import os
 import random
 import neat
+import fps
 
 BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
@@ -13,9 +14,6 @@ BG_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "background.png"
 
 pg.font.init()
 font = pg.font.SysFont("Arial", 50)
-
-
-
 
 screen = pg.display.set_mode((setup.width, setup.height))
 pg.display.set_caption(setup.name)
@@ -107,7 +105,10 @@ def draw_window(window, birds, pipes, score):
 
     for bird in birds:
         bird.draw(window)
+    window.blit(fps.update_fps(), (10, 0))
     pg.display.update()
+
+    fps.clock.tick(60)
 
 
 class Pipe:
@@ -167,30 +168,28 @@ def fitness_fun(genomes, config):
         g.fitness = 0
         ge.append(g)
 
-
     pipes = [Pipe(700)]
 
     score = 0
 
     clock = pg.time.Clock()
-    gameOn = True
-    while gameOn:
+    game_on = True
+    while game_on:
         clock.tick(30)
         keys_pressed = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT or keys_pressed[pg.K_ESCAPE]:
-                gameOn = False
+                game_on = False
                 pg.quit()
                 quit()
-            # if event.type == pg.KEYDOWN:
-            #     if event.key == pg.K_w:
-            #         bird.jump()
+
         pipe_ind = 0
         if len(birds) > 0:
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].pipe_top.get_width():
                 pipe_ind = 1
         else:
             run = False
+            # czy ta zmienna run w ogóle coś robi?
             break
 
         for x, bird in enumerate(birds):
@@ -198,11 +197,11 @@ def fitness_fun(genomes, config):
             ge[x].fitness += 0.1
             # ^^ tą wartość trzeba zmienić
 
-            output = nets[x].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
+            output = nets[x].activate(
+                (bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
             if output[0] > 0.5:
                 bird.jump()
             # mozna zmienic na 0.5
-
 
         add_pipe = False
         rem = []
@@ -215,13 +214,11 @@ def fitness_fun(genomes, config):
                     nets.pop(x)
                     ge.pop(x)
 
-
                 if not pipe.passed and pipe.x < bird.x:
                     pipe.passed = True
                     add_pipe = True
             if pipe.x + pipe.pipe_top.get_width() < 0:
                 rem.append(pipe)
-
 
             pipe.move()
 
@@ -237,7 +234,6 @@ def fitness_fun(genomes, config):
             pipes.remove(r)
         for x, bird in enumerate(birds):
             if bird.y + bird.img.get_height() >= setup.height or bird.y < 0:
-
                 # w razie czego wywalić ten fitness
                 ge[x].fitness -= 1
                 # birds.remove(bird)
@@ -245,14 +241,12 @@ def fitness_fun(genomes, config):
                 nets.pop(x)
                 ge.pop(x)
 
-
-
         draw_window(screen, birds, pipes, score)
 
 
-
 def run(config_path):
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
+                                neat.DefaultStagnation, config_path)
 
     population = neat.Population(config)
     population.add_reporter(neat.StdOutReporter(True))
@@ -260,6 +254,7 @@ def run(config_path):
     population.add_reporter(stats)
 
     winner = population.run(fitness_fun, 200)
+
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
