@@ -4,6 +4,9 @@ import os
 import random
 import neat
 import fps
+import sys
+
+# sys.stdout = open("log.txt", "w")
 
 BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
@@ -175,7 +178,7 @@ def fitness_fun(genomes, config):
     clock = pg.time.Clock()
     game_on = True
     while game_on:
-        clock.tick(30)
+        clock.tick(60)
         keys_pressed = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT or keys_pressed[pg.K_ESCAPE]:
@@ -228,6 +231,8 @@ def fitness_fun(genomes, config):
                 # można dać 10 fitnessu
                 g.fitness += 5
 
+            if len(ge):
+                print(int(max(x.fitness for x in ge)))
             pipes.append(Pipe(600))
 
         for r in rem:
@@ -260,3 +265,4 @@ if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "neatconfig.txt")
     run(config_path)
+    # sys.stdout.close()
