@@ -7,9 +7,12 @@ import fps
 import sys
 from bird import Bird
 from pipe import Pipe
+import visualise
 
 # sys.stdout = open("log.txt", "w")
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
+highest = 0
 
 
 BASE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "base.png")))
@@ -116,13 +119,17 @@ def fitness_fun(genomes, config):
             pipe.move()
 
         if add_pipe:
+            global highest
             score += 1
+            if score > highest:
+                highest = score
             for g in ge:
                 # można dać 10 fitnessu
                 g.fitness += 5
 
             if len(ge):
-                print(int(max(x.fitness for x in ge)))
+                varx = int(max(x.fitness for x in ge))
+                print(f"Score: {score} fitness: {varx} highest score: {highest} ")
             pipes.append(Pipe(600))
 
         for r in rem:
@@ -138,6 +145,8 @@ def fitness_fun(genomes, config):
 
         draw_window(screen, birds, pipes, score)
 
+xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
+xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
@@ -148,8 +157,23 @@ def run(config_path):
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
 
-    winner = population.run(fitness_fun, 200)
 
+    winner = population.run(fitness_fun, 5000)
+
+    # chuj wie co da xddd
+    # stats.save()
+    # unique_genomes = stats.best_unique_genomes(5)
+    # assert 1 <= len(unique_genomes) <= 5, "Unique genomes: {!r}".format(unique_genomes)
+    # genomes = stats.best_genomes(5)
+    # assert 1 <= len(genomes) <= 5, "Genomes: {!r}".format(genomes)
+    # stats.best_genome()
+    # population.remove_reporter(stats)
+    # node_names = {-1: 'A', -2: 'B', 0: 'A XOR B'}
+    # visualise.draw_net(config, winner, True, node_names=node_names)
+    # visualise.plot_stats(stats, ylog=False, view=True)
+    # visualise.plot_species(stats, view=True)
+
+    print('\nBest genome:\n{!s}'.format(winner))
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
