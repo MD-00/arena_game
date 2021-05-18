@@ -5,13 +5,13 @@ import random
 import neat
 import fps
 import sys
+from bird import Bird
+from pipe import Pipe
 
 # sys.stdout = open("log.txt", "w")
 
-BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
-             pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
-             pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird3.png")))]
-PIPE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "pipe.png")))
+
+
 BASE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "base.png")))
 BG_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "background.png")))
 
@@ -26,75 +26,7 @@ pg.display.set_icon(icon)
 
 # defining Bird
 
-class Bird:
-    IMGS = BIRD_IMGS
-    max_rotation = 25
-    rot_vel = 20
-    animation_time = 5
 
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.tilt = 0
-        self.vel = 0
-        self.height = self.y
-        self.img_count = 0
-        self.img = self.IMGS[0]
-        self.tick_count = 0
-
-    def jump(self):
-        self.vel = -13
-        self.tick_count = 0
-        self.height = self.y
-
-    def move(self):
-        self.tick_count += 1
-        d = self.vel * self.tick_count + 2 * self.tick_count ** 2
-
-        if d >= 11:
-            d = (d / abs(d)) * 11
-
-        if d < 0:
-            d -= 5
-
-        self.y = self.y + d
-
-        if d < 0 or self.y < self.height + 50:
-            if self.tilt < self.max_rotation:
-                self.tilt = self.max_rotation
-        else:
-            if self.tilt > -60:
-                self.tilt -= self.rot_vel
-
-    def draw(self, window):
-        self.img_count += 1
-
-        if self.img_count <= self.animation_time:
-            self.img = self.IMGS[0]
-        elif self.img_count <= self.animation_time * 2:
-            self.img = self.IMGS[1]
-        elif self.img_count <= self.animation_time * 3:
-            self.img = self.IMGS[2]
-        elif self.img_count <= self.animation_time * 4:
-            self.img = self.IMGS[1]
-        elif self.img_count == self.animation_time * 4 + 1:
-            self.img = self.IMGS[0]
-            self.img_count = 0
-
-        if self.tilt <= -60:
-            self.img = self.IMGS[1]
-            self.img_count = self.animation_time * 2
-
-        blitRotateCenter(window, self.img, (self.x, self.y), self.tilt)
-
-    def get_mask(self):
-        return pg.mask.from_surface(self.img)
-
-
-def blitRotateCenter(surf, image, topleft, angle):
-    rotated_image = pg.transform.rotate(image, angle)
-    new_rect = rotated_image.get_rect(center=image.get_rect(topleft=topleft).center)
-    surf.blit(rotated_image, new_rect.topleft)
 
 
 def draw_window(window, birds, pipes, score):
@@ -114,49 +46,7 @@ def draw_window(window, birds, pipes, score):
     fps.clock.tick(60)
 
 
-class Pipe:
-    gap = 180
-    vel = 5
 
-    def __init__(self, x):
-        self.x = x
-        self.height = 0
-
-        self.top = 0
-        self.bottom = 0
-        self.pipe_top = pg.transform.flip(PIPE_IMG, False, True)
-        self.pipe_bottom = PIPE_IMG
-
-        self.passed = False
-        self.set_height()
-
-    def set_height(self):
-        self.height = random.randrange(50, 450)
-        self.top = self.height - self.pipe_top.get_height()
-        self.bottom = self.height + self.gap
-
-    def move(self):
-        self.x -= self.vel
-
-    def draw(self, window):
-        window.blit(self.pipe_top, (self.x, self.top))
-        window.blit(self.pipe_bottom, (self.x, self.bottom))
-
-    def collide(self, bird):
-        bird_mask = bird.get_mask()
-        top_mask = pg.mask.from_surface(self.pipe_top)
-        bottom_mask = pg.mask.from_surface(self.pipe_bottom)
-
-        top_offset = (self.x - bird.x, self.top - round(bird.y))
-        bottom_offset = (self.x - bird.x, self.bottom - round(bird.y))
-
-        b_point = bird_mask.overlap(bottom_mask, bottom_offset)
-        t_point = bird_mask.overlap(top_mask, top_offset)
-
-        if t_point or b_point:
-            return True
-
-        return False
 
 
 def fitness_fun(genomes, config):
