@@ -1,10 +1,7 @@
 import pygame as pg
-import setup
 import os
 import random
-import neat
-import fps
-import sys
+
 
 PIPE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "pipe.png")))
 
@@ -25,7 +22,7 @@ class Pipe:
         self.set_height()
 
     def set_height(self):
-        self.height = random.randrange(100, 380)
+        self.height = random.randrange(100, 360)
         self.top = self.height - self.pipe_top.get_height()
         self.bottom = self.height + self.gap
 

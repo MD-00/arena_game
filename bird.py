@@ -1,10 +1,5 @@
 import pygame as pg
-import setup
 import os
-import random
-import neat
-import fps
-import sys
 
 BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),

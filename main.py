@@ -1,19 +1,14 @@
 import pygame as pg
 import setup
 import os
-import random
 import neat
 import fps
-import sys
 from bird import Bird
 from pipe import Pipe
-import visualise
 
-# sys.stdout = open("log.txt", "w")
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 highest = 0
-
 
 BASE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "base.png")))
 BG_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "background.png")))
@@ -25,11 +20,6 @@ screen = pg.display.set_mode((setup.width, setup.height))
 pg.display.set_caption(setup.name)
 icon = pg.image.load(os.path.join("IMG", "bird1.png"))
 pg.display.set_icon(icon)
-
-
-# defining Bird
-
-
 
 
 def draw_window(window, birds, pipes, score):
@@ -49,9 +39,6 @@ def draw_window(window, birds, pipes, score):
     fps.clock.tick(60)
 
 
-
-
-
 def fitness_fun(genomes, config):
     nets = []
     ge = []
@@ -65,9 +52,7 @@ def fitness_fun(genomes, config):
         ge.append(g)
 
     pipes = [Pipe(700)]
-
     score = 0
-
     clock = pg.time.Clock()
     game_on = True
     while game_on:
@@ -85,19 +70,15 @@ def fitness_fun(genomes, config):
                 pipe_ind = 1
         else:
             run = False
-            # czy ta zmienna run w ogóle coś robi?
             break
 
         for x, bird in enumerate(birds):
             bird.move()
             ge[x].fitness += 0.1
-            # ^^ tą wartość trzeba zmienić
-
             output = nets[x].activate(
                 (bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
             if output[0] > 0.5:
                 bird.jump()
-            # mozna zmienic na 0.5
 
         add_pipe = False
         rem = []
@@ -105,7 +86,6 @@ def fitness_fun(genomes, config):
             for x, bird in enumerate(birds):
                 if pipe.collide(bird):
                     ge[x].fitness -= 1
-                    # birds.remove(bird)
                     birds.pop(x)
                     nets.pop(x)
                     ge.pop(x)
@@ -124,7 +104,6 @@ def fitness_fun(genomes, config):
             if score > highest:
                 highest = score
             for g in ge:
-                # można dać 10 fitnessu
                 g.fitness += 5
 
             if len(ge):
@@ -136,17 +115,13 @@ def fitness_fun(genomes, config):
             pipes.remove(r)
         for x, bird in enumerate(birds):
             if bird.y + bird.img.get_height() >= setup.height or bird.y < 0:
-                # w razie czego wywalić ten fitness
                 ge[x].fitness -= 1
-                # birds.remove(bird)
                 birds.pop(x)
                 nets.pop(x)
                 ge.pop(x)
 
         draw_window(screen, birds, pipes, score)
 
-xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
-xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
@@ -157,26 +132,10 @@ def run(config_path):
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
 
-
     winner = population.run(fitness_fun, 5000)
-
-    # chuj wie co da xddd
-    # stats.save()
-    # unique_genomes = stats.best_unique_genomes(5)
-    # assert 1 <= len(unique_genomes) <= 5, "Unique genomes: {!r}".format(unique_genomes)
-    # genomes = stats.best_genomes(5)
-    # assert 1 <= len(genomes) <= 5, "Genomes: {!r}".format(genomes)
-    # stats.best_genome()
-    # population.remove_reporter(stats)
-    # node_names = {-1: 'A', -2: 'B', 0: 'A XOR B'}
-    # visualise.draw_net(config, winner, True, node_names=node_names)
-    # visualise.plot_stats(stats, ylog=False, view=True)
-    # visualise.plot_species(stats, view=True)
-
     print('\nBest genome:\n{!s}'.format(winner))
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "neatconfig.txt")
     run(config_path)
-    # sys.stdout.close()
