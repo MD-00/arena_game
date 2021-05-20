@@ -8,6 +8,7 @@ from pipe import Pipe
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
+
 highest = 0
 
 BASE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "base.png")))
@@ -44,6 +45,7 @@ def fitness_fun(genomes, config):
     ge = []
     birds = []
 
+
     for _, g in genomes:
         net = neat.nn.FeedForwardNetwork.create(g, config)
         nets.append(net)
@@ -70,6 +72,9 @@ def fitness_fun(genomes, config):
                 pipe_ind = 1
         else:
             run = False
+            plik = open("log.txt", "at")
+            plik.write(f"{score} ")
+
             break
 
         for x, bird in enumerate(birds):
@@ -136,6 +141,10 @@ def run(config_path):
     print('\nBest genome:\n{!s}'.format(winner))
 
 if __name__ == "__main__":
+    xd = open("log.txt", "wt")
+    xd.write("")
+    xd.close()
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "neatconfig.txt")
     run(config_path)
+
