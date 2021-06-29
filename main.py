@@ -6,7 +6,8 @@ import fps
 from bird import Bird
 from pipe import Pipe
 
-os.environ["SDL_VIDEODRIVER"] = "dummy"
+#odkomentowac, zeby dzialalo na serwerze
+# os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
 highest = 0
@@ -22,7 +23,7 @@ pg.display.set_caption(setup.name)
 icon = pg.image.load(os.path.join("IMG", "bird1.png"))
 pg.display.set_icon(icon)
 
-
+#draw_window - funkcja odpowiadająca za wyświetlanie grafiki
 def draw_window(window, birds, pipes, score):
     window.blit(BG_IMG, (0, 0))
 
@@ -127,7 +128,7 @@ def fitness_fun(genomes, config):
 
         draw_window(screen, birds, pipes, score)
 
-
+#run - główna pętla programu
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
                                 neat.DefaultStagnation, config_path)
@@ -147,4 +148,6 @@ if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "neatconfig.txt")
     run(config_path)
+
+
 

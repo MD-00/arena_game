@@ -5,6 +5,7 @@ import random
 
 PIPE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "pipe.png")))
 
+#Pipe - klasa opisująca mechanikę przeszkód
 class Pipe:
     gap = 180
     vel = 5
@@ -21,18 +22,25 @@ class Pipe:
         self.passed = False
         self.set_height()
 
+# set_height - metoda do określenia losowego wyświetlania
+# przeszkód
     def set_height(self):
         self.height = random.randrange(100, 360)
         self.top = self.height - self.pipe_top.get_height()
         self.bottom = self.height + self.gap
 
+# move - metoda określająca mechanikę poruszania się przeszkód
     def move(self):
         self.x -= self.vel
 
+# draw - metoda odpowiadająca za wyświetlanie grafiki przeszkody
     def draw(self, window):
         window.blit(self.pipe_top, (self.x, self.top))
         window.blit(self.pipe_bottom, (self.x, self.bottom))
 
+# collide - metoda służąca do wykrywania kolizji, wykorzystywana jest
+#metoda get_mask klasy Bird aby uzyskać największą precyzje
+#zderzenia
     def collide(self, bird):
         bird_mask = bird.get_mask()
         top_mask = pg.mask.from_surface(self.pipe_top)

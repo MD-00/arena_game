@@ -5,6 +5,7 @@ BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png")
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird3.png")))]
 
+#Bird - klasa opisująca mechanikę obiektu, którym sterujemy
 class Bird:
     IMGS = BIRD_IMGS
     max_rotation = 25
@@ -21,11 +22,16 @@ class Bird:
         self.img = self.IMGS[0]
         self.tick_count = 0
 
+#jump - metoda odpowiadająca za mechanikę skoku w
+# momencie impulsu sterującego
+
     def jump(self):
         self.vel = -13
         self.tick_count = 0
         self.height = self.y
 
+#move - metoda określająca zmianę położenia w okresie
+# jednej klatki
     def move(self):
         self.tick_count += 1
         d = self.vel * self.tick_count + 2 * self.tick_count ** 2
@@ -45,6 +51,8 @@ class Bird:
             if self.tilt > -60:
                 self.tilt -= self.rot_vel
 
+#draw - metoda, dzięki której jest wyświetlana
+# animacja lotu oraz opadania w przypadku braku reakcji na impuls skoku
     def draw(self, window):
         self.img_count += 1
 
@@ -66,6 +74,8 @@ class Bird:
 
         blitRotateCenter(window, self.img, (self.x, self.y), self.tilt)
 
+#get_mask - metoda zwraca maskę obiektu,
+# pozwala na uzyskanie zaawansowanej techniki kolizji
     def get_mask(self):
         return pg.mask.from_surface(self.img)
 
