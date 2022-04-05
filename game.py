@@ -152,7 +152,7 @@ class Pipe:
         return False
 
 
-def main():
+def game():
     bird = Bird(230, 350)
     pipes = [Pipe(700)]
 
@@ -201,5 +201,3 @@ def main():
     pg.quit()
     quit()
 
-
-main()

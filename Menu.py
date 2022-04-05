@@ -1,6 +1,6 @@
 import pygame
-
-
+import os
+import game
 class Option:
     hovered = False
 
@@ -23,6 +23,12 @@ class Option:
         else:
             return (100, 100, 100)
 
+    def do_something(self):
+        if 'NEW' in self.text:
+            game.game()
+        if 'QUIT' in self.text:
+            pygame.quit()
+
     def set_rect(self):
         self.set_rend()
         self.rect = self.rend.get_rect()
@@ -30,16 +36,20 @@ class Option:
 
 
 pygame.init()
-screen = pygame.display.set_mode((480, 320))
+screen = pygame.display.set_mode((500, 800))
 menu_font = pygame.font.Font(None, 40)
-options = [Option("NEW GAME", (140, 105)), Option("LOAD GAME", (135, 155)),
-           Option("OPTIONS", (145, 205))]
+options = [Option("NEW GAME", (140, 105)), Option("CHANGE SKIN", (135, 155)),
+           Option("QUIT", (145, 205))]
 while True:
     pygame.event.pump()
     screen.fill((0, 0, 0))
     for option in options:
         if option.rect.collidepoint(pygame.mouse.get_pos()):
             option.hovered = True
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    option.do_something()
+
         else:
             option.hovered = False
         option.draw()
