@@ -3,9 +3,11 @@ import setup
 import os
 import random
 
+
 BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird3.png")))]
+
 PIPE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "pipe.png")))
 BASE_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "base.png")))
 BG_IMG = pg.transform.scale2x(pg.image.load(os.path.join("IMG", "background.png")))
@@ -23,14 +25,14 @@ pg.display.set_icon(icon)
 
 
 # defining Bird
-
 class Bird:
-    IMGS = BIRD_IMGS
+
     max_rotation = 25
     rot_vel = 20
     animation_time = 5
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, color = 'y'):
+        self.IMGS = self.change_bird_color(color)
         self.x = x
         self.y = y
         self.tilt = 0
@@ -39,6 +41,20 @@ class Bird:
         self.img_count = 0
         self.img = self.IMGS[0]
         self.tick_count = 0
+
+    def change_bird_color(self, color='y'):
+        if color == 'y':
+            return [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
+                    pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
+                    pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird3.png")))]
+        elif color == 'b':
+            return [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bluebird1.png"))),
+                    pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bluebird2.png"))),
+                    pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bluebird3.png")))]
+        elif color == 'r':
+            return [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "redbird1.png"))),
+                    pg.transform.scale2x(pg.image.load(os.path.join("IMG", "redbird2.png"))),
+                    pg.transform.scale2x(pg.image.load(os.path.join("IMG", "redbird3.png")))]
 
     def jump(self):
         self.vel = -13
@@ -109,9 +125,10 @@ def draw_window(window, bird, pipes, score):
 
 class Pipe:
     gap = 225
+
     vel = 5
 
-    def __init__(self, x):
+    def __init__(self, x, color='y'):
         self.x = x
         self.height = 0
 
@@ -119,9 +136,9 @@ class Pipe:
         self.bottom = 0
         self.pipe_top = pg.transform.flip(PIPE_IMG, False, True)
         self.pipe_bottom = PIPE_IMG
-
         self.passed = False
         self.set_height()
+        self.color = color
 
     def set_height(self):
         self.height = random.randrange(50, 450)
@@ -152,16 +169,19 @@ class Pipe:
         return False
 
 
-def game():
-    bird = Bird(230, 350)
-    pipes = [Pipe(700)]
+def game(color):
+    bird = Bird(230, 350,color)
+    pipes = [Pipe(700,color)]
 
     score = 0
 
     clock = pg.time.Clock()
     gameOn = True
     while gameOn:
-        clock.tick(30)
+        if color == 'r':
+            clock.tick(35)
+        else:
+            clock.tick(30)
         keys_pressed = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT or keys_pressed[pg.K_ESCAPE]:

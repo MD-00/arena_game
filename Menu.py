@@ -5,9 +5,11 @@ class Option:
     hovered = False
 
     def __init__(self, text, pos):
+
         self.text = text
         self.pos = pos
         self.set_rect()
+        self.save_options = []
         self.draw()
 
     def draw(self):
@@ -24,9 +26,21 @@ class Option:
             return (100, 100, 100)
 
     def do_something(self):
-        if 'NEW' in self.text:
-            game.game()
-        if 'QUIT' in self.text:
+        global options
+        global sub_menu
+        if 'PLAY' in self.text:
+            game.game(color='y')
+        if 'CHANGE' in self.text:
+            self.save_options = options
+            options = sub_menu
+            self.draw()
+        if 'BLUE' in self.text:
+            game.game(color='b')
+        if 'YELLOW' in self.text:
+            game.game(color='y')
+        if 'NIGER' in self.text:
+            game.game(color='r')
+        if 'QUIT' in self.text or 'EXIT' in self.text:
             pygame.quit()
 
     def set_rect(self):
@@ -38,8 +52,12 @@ class Option:
 pygame.init()
 screen = pygame.display.set_mode((500, 800))
 menu_font = pygame.font.Font(None, 40)
-options = [Option("NEW GAME", (140, 105)), Option("CHANGE SKIN", (135, 155)),
+sub_menu = [Option("YELLOW", (60, 155),), Option("BLUE", (240, 155)), Option("NIGER", (380, 155)), Option("EXIT", (145, 205))]
+
+options = [Option("PLAY", (140, 105)), Option("CHANGE SKIN", (135, 155)),
            Option("QUIT", (145, 205))]
+
+
 while True:
     pygame.event.pump()
     screen.fill((0, 0, 0))
