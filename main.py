@@ -169,14 +169,16 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_w:
                     bird.jump()
+            if event.type == pg.MOUSEBUTTONDOWN:
+                bird.jump()
         draw_window(screen, bird, pipes, score)
 
         add_pipe = False
         rem = []
         for pipe in pipes:
             if pipe.collide(bird):
-                pass
-                # gameOn = False
+                # pass
+                gameOn = False
 
             if pipe.x + pipe.pipe_top.get_width() < 0:
                 rem.append(pipe)
