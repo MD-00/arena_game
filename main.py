@@ -166,9 +166,9 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT or keys_pressed[pg.K_ESCAPE]:
                 gameOn = False
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_w:
-                    bird.jump()
+            if keys_pressed[pg.K_w]:
+                # if event.key == pg.K_w:
+                bird.jump()
         draw_window(screen, bird, pipes, score)
 
         add_pipe = False
