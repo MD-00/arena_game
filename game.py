@@ -119,9 +119,15 @@ def draw_window(window, bird, pipes, score):
 
     text = font.render("Score: " + str(score), 1, (255, 255, 255))
     window.blit(text, (setup.width - 20 - text.get_width(), 10))
-    bird.draw(window)
-    pg.display.update()
-
+    if pipe.collide(bird):
+        text2 = font.render("Przegrałeś: " + str(score), 1, (255, 255, 255))
+        window.blit(text2, (setup.width/2 - text2.get_width()/2, setup.height/2))
+        bird.draw(window)
+        pg.display.update()
+        pg.time.delay(3000)
+    else:
+        bird.draw(window)
+        pg.display.update()
 
 class Pipe:
     gap = 225
@@ -165,9 +171,7 @@ class Pipe:
 
         if t_point or b_point:
             return True
-
         return False
-
 
 def game(color):
     bird = Bird(230, 350,color)
@@ -187,7 +191,7 @@ def game(color):
             if event.type == pg.QUIT or keys_pressed[pg.K_ESCAPE]:
                 gameOn = False
             if event.type == pg.KEYDOWN:
-                if event.key == pg.K_w:
+                if event.key == pg.K_SPACE:
                     bird.jump()
             if event.type == pg.MOUSEBUTTONDOWN:
                 bird.jump()

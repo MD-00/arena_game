@@ -1,6 +1,11 @@
 import pygame
 import os
 import game
+import setup
+pygame.init()
+screen = pygame.display.set_mode((500, 800))
+menu_font = pygame.font.Font(None, 40)
+
 class Option:
     hovered = False
 
@@ -31,17 +36,19 @@ class Option:
         if 'PLAY' in self.text:
             game.game(color='y')
         if 'CHANGE' in self.text:
-            self.save_options = options
             options = sub_menu
             self.draw()
         if 'BLUE' in self.text:
             game.game(color='b')
         if 'YELLOW' in self.text:
             game.game(color='y')
-        if 'NIGER' in self.text:
+        if 'BLACK' in self.text:
             game.game(color='r')
-        if 'QUIT' in self.text or 'EXIT' in self.text:
+        if 'QUIT' in self.text:
             pygame.quit()
+        if 'RETURN' in self.text:
+            options = options_menu
+            self.draw()
 
     def set_rect(self):
         self.set_rend()
@@ -49,15 +56,12 @@ class Option:
         self.rect.topleft = self.pos
 
 
-pygame.init()
-screen = pygame.display.set_mode((500, 800))
-menu_font = pygame.font.Font(None, 40)
-sub_menu = [Option("YELLOW", (60, 155),), Option("BLUE", (240, 155)), Option("NIGER", (380, 155)), Option("EXIT", (145, 205))]
+sub_menu = [Option("YELLOW", (setup.width/5 -30, 155),), Option("BLUE", (setup.width/2 - 30, 155)), Option("BLACK", (setup.width*3/4 - 30, 155)), Option("RETURN", (setup.width/2 - 45, 205))]
 
-options = [Option("PLAY", (140, 105)), Option("CHANGE SKIN", (135, 155)),
+options_menu = [Option("PLAY", (140, 105)), Option("CHANGE SKIN", (135, 155)),
            Option("QUIT", (145, 205))]
 
-
+options = options_menu
 while True:
     pygame.event.pump()
     screen.fill((0, 0, 0))
