@@ -120,11 +120,11 @@ def draw_window(window, bird, pipes, score):
     text = font.render("Score: " + str(score), 1, (255, 255, 255))
     window.blit(text, (setup.width - 20 - text.get_width(), 10))
     if pipe.collide(bird):
-        text2 = font.render("Przegrałeś: " + str(score), 1, (255, 255, 255))
+        text2 = font.render("Przegrałeś z: " + str(score) + "pkt", 1, (255, 255, 255))
         window.blit(text2, (setup.width/2 - text2.get_width()/2, setup.height/2))
         bird.draw(window)
         pg.display.update()
-        pg.time.delay(3000)
+        pg.time.delay(2000)
     else:
         bird.draw(window)
         pg.display.update()
@@ -221,7 +221,4 @@ def game(color):
             pass
             # gameOn=False
         bird.move()
-
-    pg.quit()
-    quit()
 

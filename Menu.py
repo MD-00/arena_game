@@ -45,7 +45,7 @@ class Option:
         if 'BLACK' in self.text:
             game.game(color='r')
         if 'QUIT' in self.text:
-            pygame.quit()
+            quit()
         if 'RETURN' in self.text:
             options = options_menu
             self.draw()
