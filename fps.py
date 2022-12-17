@@ -7,5 +7,6 @@ clock = pg.time.Clock()
 
 def update_fps():
     fps = str(int(clock.get_fps()))
+    # print(fps)
     fps_text = font.render("FPS: " + fps, 1, pg.Color("Black"))
     return fps_text
