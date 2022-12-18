@@ -1,16 +1,15 @@
 import pygame as pg
 import setup
 import os
-import neat
 import fps
 import random
 from bird import Bird
 from pipe import Pipe
-from numba import jit, cuda
+from argparse import ArgumentParser
 import copy
 
 #odkomentowac, zeby dzialalo na serwerze
-# os.environ["SDL_VIDEODRIVER"] = "dummy"
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
 highest = 0
@@ -30,7 +29,6 @@ birds = []
 
 
 #draw_window - funkcja odpowiadająca za wyświetlanie grafiki
-# @jit(target_backend='cuda')
 def draw_window(window, birds, pipes, score):
     window.blit(BG_IMG, (0, 0))
 
@@ -48,18 +46,14 @@ def draw_window(window, birds, pipes, score):
 
     fps.clock.tick(140)
 
-# @jit(target_backend='cuda')
 def get_score(e):
     return e.score
 
-# @jit(target_backend='cuda')
 def crossover_and_mutate(birds: tuple, crossover_rate, mutation_rate):
     bird_1 = copy.copy(birds[0])
     bird_2 = copy.copy(birds[1])
 
     new_bird = Bird(230, 350)
-
-    # bird_2 = birds[1].deepcopy()
 
     if random.random() < crossover_rate:
         new_bird.net.weights1 = (bird_1.net.weights1 + bird_2.net.weights1) / 2
@@ -71,40 +65,25 @@ def crossover_and_mutate(birds: tuple, crossover_rate, mutation_rate):
     if random.random() < mutation_rate:
         new_bird = Bird(230, 350)
 
-
     return new_bird
 
-# @jit(target_backend='cuda')
-def mutation(bird_1):
-    pass
 
-# @jit(target_backend='cuda')
 def pop_random(lst):
     idx = random.randrange(0, len(lst))
     return lst[idx]
 
-# @jit(target_backend='cuda')
 def breed(reproduction_rate, crossover_rate, mutation_rate, population):
-    # musza byc w offspring na pewno 2 najlepsze ptaki
-    # z najlepszych ptaków robimy offspring
-    # reszte mutujemy???
-
     global birds
     parent_birds = sorted(birds, key=get_score, reverse=True)
     birds = []
 
     birds.append(parent_birds[0])
     birds.append(parent_birds[1])
-    print(birds)
 
     children_birds = parent_birds[0:int(reproduction_rate * len(parent_birds))]
 
-
-    print(len(parent_birds))
-    print(len(children_birds))
     fulfillment = random.sample(children_birds, len(parent_birds)-len(children_birds))
     children_birds = children_birds + fulfillment
-    print(children_birds)
 
     pairs = []
     for x in range(population-2):
@@ -112,22 +91,9 @@ def breed(reproduction_rate, crossover_rate, mutation_rate, population):
         rand_2 = pop_random(children_birds)
         pairs.append((rand_1, rand_2))
 
-    print(len(pairs))
-    print(len(set(pairs)))
-
-
     for pair in pairs:
         birds.append(crossover_and_mutate(pair, crossover_rate, mutation_rate))
-        print(birds)
 
-    # print(f'XD!: {len(birds)}')
-
-    # for x, bird in enumerate(children_birds):
-    #     if random.random() < crossover_rate:
-    #         crossover(random.sample(children_birds, 2))
-    #
-    #     if random.random() < mutation_rate:
-    #         pass
 
 def breed_2():
     global birds
@@ -148,26 +114,17 @@ def breed_2():
     children_birds.append(random.sample(parent_birds, 1))
     children_birds.append(random.sample(parent_birds, 1))
 
-    # children_birds.append(Bird)
-    # children_birds.append(Bird)
-    print(f'lenght children birds: {len(children_birds)}')
     birds = children_birds
 
 
-
-
-
-# @jit(target_backend='cuda')
 def GA_fun(bird_population):
     global birds
-    # birds = []
-
 
     pipes = [Pipe(700)]
     score = 0
     clock = pg.time.Clock()
     game_on = True
-    # alive_birds = bird_population
+
     while game_on:
 
         alive_birds = any([bird.is_alive for bird in birds])
@@ -184,8 +141,6 @@ def GA_fun(bird_population):
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].pipe_top.get_width():
                 pipe_ind = 1
         else:
-            # plik = open("log.txt", "at")
-            # plik.write(f"{score} ")
 
             break
 
@@ -206,9 +161,6 @@ def GA_fun(bird_population):
                     birds[x].score -= 1
                     bird.is_alive = False
                     alive_birds -= 1
-                    # birds.pop(x)
-                    # nets.pop(x)
-                    # ge.pop(x)
 
                 if not pipe.passed and pipe.x < bird.x and bird.is_alive:
                     pipe.passed = True
@@ -239,67 +191,54 @@ def GA_fun(bird_population):
                 birds[x].score -= 1
                 bird.is_alive = False
                 alive_birds-=1
-                # birds.pop(x)
-                # nets.pop(x)
-                # ge.pop(x)
-
 
         draw_window(screen, birds, pipes, score)
-        # print(f'alive birds: {alive_birds}')
-        # return birds
 
-# @jit(target_backend='cuda')
 def revive():
     for bird in birds:
-        print(bird)
         bird.revive(230, 350)
 
 
-#run - główna pętla programu
-def run(config_path):
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
-                                neat.DefaultStagnation, config_path)
-
-    population = neat.Population(config)
-    population.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    population.add_reporter(stats)
-
-    # winner = population.run(fitness_fun, 5000)
-    # print('\nBest genome:\n{!s}'.format(winner))
-
-
-
 if __name__ == "__main__":
-    xd = open("log.txt", "wt")
-    xd.write("")
-    xd.close()
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, "neatconfig.txt")
+    parser = ArgumentParser()
+    parser.add_argument(
+        "-p",
+        "--population",
+        type=int,
+        default=10,
+    )
+    parser.add_argument(
+        "-r",
+        "--reproduction_rate",
+        type=float,
+        default=0.6,
+    )
+    parser.add_argument(
+        "-c",
+        "--crossover_rate",
+        type=float,
+        default=0.7,
+    )
+    parser.add_argument(
+        "-m",
+        "--mutation_rate",
+        type=float,
+        default=0.1,
+    )
+    args = parser.parse_args()
 
-
+    print(args)
     #init
-    population = 10
-    reproduction_rate = 0.6
-    crossover_rate = 0.7
-    mutation_rate = 0.1
-
+    population = args.population
+    reproduction_rate = args.reproduction_rate
+    crossover_rate = args.crossover_rate
+    mutation_rate = args.mutation_rate
 
     for x in range(population):
         birds.append(Bird(230, 350))
+
     while True:
         GA_fun(population)
-        # for bird in birds:
-        #     print(f'--- new ptak ---')
-        #     bird.net.display()
         breed(reproduction_rate, crossover_rate, mutation_rate, population)
-        # breed_2()
         revive()
         print(f'--- new generation ---')
-
-
-    # po kazdej generacji musi byc mutacja i crossover
-    # i musi być zerowany score
-    # i flaga is_alive na True
-
-
