@@ -3,14 +3,15 @@ import setup
 import os
 import fps
 import random
+import boto3
 from bird import Bird
 from pipe import Pipe
 from argparse import ArgumentParser
+from datetime import datetime
 import copy
+import pickle
 
-#odkomentowac, zeby dzialalo na serwerze
-os.environ["SDL_VIDEODRIVER"] = "dummy"
-
+# os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 highest = 0
 
@@ -26,7 +27,6 @@ icon = pg.image.load(os.path.join("IMG", "bird1.png"))
 pg.display.set_icon(icon)
 
 birds = []
-
 
 #draw_window - funkcja odpowiadająca za wyświetlanie grafiki
 def draw_window(window, birds, pipes, score):
@@ -95,29 +95,29 @@ def breed(reproduction_rate, crossover_rate, mutation_rate, population):
         birds.append(crossover_and_mutate(pair, crossover_rate, mutation_rate))
 
 
-def breed_2():
-    global birds
-    children_birds = []
-    parent_birds = sorted(birds, key=get_score, reverse=True)
-    for x in range(4):
-        children_birds.append(parent_birds[0])
+# def breed_2():
+#     global birds
+#     children_birds = []
+#     parent_birds = sorted(birds, key=get_score, reverse=True)
+#     for x in range(4):
+#         children_birds.append(parent_birds[0])
+#
+#     best = crossover_and_mutate([parent_birds[0], parent_birds[1]])
+#     children_birds.append(best[0])
+#     children_birds.append(best[1])
+#
+#     for x in range(3):
+#         new = crossover_and_mutate(random.sample(parent_birds, 2))
+#         children_birds.append(new[0])
+#         children_birds.append(new[1])
+#
+#     children_birds.append(random.sample(parent_birds, 1))
+#     children_birds.append(random.sample(parent_birds, 1))
+#
+#     birds = children_birds
 
-    best = crossover_and_mutate([parent_birds[0], parent_birds[1]])
-    children_birds.append(best[0])
-    children_birds.append(best[1])
 
-    for x in range(3):
-        new = crossover_and_mutate(random.sample(parent_birds, 2))
-        children_birds.append(new[0])
-        children_birds.append(new[1])
-
-    children_birds.append(random.sample(parent_birds, 1))
-    children_birds.append(random.sample(parent_birds, 1))
-
-    birds = children_birds
-
-
-def GA_fun(bird_population):
+def GA_fun(generation):
     global birds
 
     pipes = [Pipe(700)]
@@ -141,7 +141,6 @@ def GA_fun(bird_population):
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].pipe_top.get_width():
                 pipe_ind = 1
         else:
-
             break
 
         for x, bird in enumerate(birds):
@@ -181,7 +180,6 @@ def GA_fun(bird_population):
 
             if alive_birds:
                 varx = int(max(x.score for x in birds))
-                print(f"Score: {score} fitness: {varx} highest score: {highest} ")
             pipes.append(Pipe(600))
 
         for r in rem:
@@ -193,6 +191,11 @@ def GA_fun(bird_population):
                 alive_birds-=1
 
         draw_window(screen, birds, pipes, score)
+
+    max_fitness = max(x.score for x in birds)
+    average_fitness = sum(x.score for x in birds) / len(birds)
+    f.write(f"{generation}, {max_fitness}, {average_fitness}, {score}\n")
+    print(f"Generation: {generation}, max fitness: {max_fitness}, avg fitness: {average_fitness}, score: {score}")
 
 def revive():
     for bird in birds:
@@ -225,20 +228,69 @@ if __name__ == "__main__":
         type=float,
         default=0.1,
     )
+    parser.add_argument(
+        "-g",
+        "--generations",
+        type=int,
+        default=5,
+    )
+    parser.add_argument(
+        "-a",
+        "--access",
+        type=str,
+    )
+    parser.add_argument(
+        "-k",
+        "--key",
+        type=str,
+    )
+
     args = parser.parse_args()
 
-    print(args)
-    #init
     population = args.population
     reproduction_rate = args.reproduction_rate
     crossover_rate = args.crossover_rate
     mutation_rate = args.mutation_rate
+    generations = args.generations
+    access = args.access
+    key = args.key
+    print(f'Population: {population}, reproduction: {reproduction_rate}, crossover: {crossover_rate}, mutation: {mutation_rate}, generations: {generations}')
+
 
     for x in range(population):
         birds.append(Bird(230, 350))
 
-    while True:
-        GA_fun(population)
+    nets = list()
+    with open('start-nets.pickle', 'rb') as handle:
+        nets = pickle.load(handle)
+
+    for i in range(len(birds)):
+        birds[i].net = nets[i]
+
+    f = open("results.txt", "w")
+    f.write(f'Population: {population}, reproduction: {reproduction_rate}, crossover: {crossover_rate}, mutation: {mutation_rate}, generations: {generations}\n')
+    f.write(f"generation, max_fitness, average_fitness, score\n")
+    for generation in range(generations):
+        GA_fun(generation)
         breed(reproduction_rate, crossover_rate, mutation_rate, population)
         revive()
-        print(f'--- new generation ---')
+
+    f.close()
+
+    with open('save-data.pickle', 'wb') as handle:
+        pickle.dump(nets, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y-H%H-M%M-S%S")
+
+    s3=boto3.client('s3', aws_access_key_id=access, aws_secret_access_key=key, region_name="us-east-1")
+    # s3.upload_file(
+    #     Filename="results.txt",
+    #     Bucket="ag-data-flappy-bird",
+    #     Key=f'results/p{population}-r{int(reproduction_rate*100)}-c{int(crossover_rate*100)}-m{int(mutation_rate*100)}-g{generations}.txt',
+    # )
+    # s3.upload_file(
+    #     Filename="save-data.pickle",
+    #     Bucket="ag-data-flappy-bird",
+    #     Key=f'pickles/p{population}-r{int(reproduction_rate*100)}-c{int(crossover_rate*100)}-m{int(mutation_rate*100)}-g{generations}.pickle',
+    # )
