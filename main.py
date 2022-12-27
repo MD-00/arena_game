@@ -55,9 +55,11 @@ def crossover_and_mutate(birds: tuple, crossover_rate, mutation_rate):
 
     new_bird = Bird(230, 350)
 
+
     if random.random() < crossover_rate:
-        new_bird.net.weights1 = (bird_1.net.weights1 + bird_2.net.weights1) / 2
-        new_bird.net.weights2 = (bird_1.net.weights2 + bird_2.net.weights2) / 2
+        param_a = random.random()
+        new_bird.net.weights1 = param_a * bird_1.net.weights1 + (1 - param_a) * bird_2.net.weights1
+        new_bird.net.weights2 = param_a * bird_1.net.weights2 + (1 - param_a) * bird_2.net.weights2
 
     else:
         new_bird = random.sample((bird_1, bird_2), 1)[0]
@@ -75,46 +77,19 @@ def pop_random(lst):
 def breed(reproduction_rate, crossover_rate, mutation_rate, population):
     global birds
     parent_birds = sorted(birds, key=get_score, reverse=True)
-    birds = []
 
-    birds.append(parent_birds[0])
-    birds.append(parent_birds[1])
-
-    children_birds = parent_birds[0:int(reproduction_rate * len(parent_birds))]
-
-    fulfillment = random.sample(children_birds, len(parent_birds)-len(children_birds))
-    children_birds = children_birds + fulfillment
+    elite_birds = parent_birds[0:int(reproduction_rate * len(parent_birds))]
+    birds = elite_birds
 
     pairs = []
-    for x in range(population-2):
-        rand_1 = pop_random(children_birds)
-        rand_2 = pop_random(children_birds)
+    for x in range(population-int(reproduction_rate * len(parent_birds))):
+        rand_1 = pop_random(elite_birds)
+        rand_2 = pop_random(elite_birds)
         pairs.append((rand_1, rand_2))
 
+    print(pairsgit)
     for pair in pairs:
         birds.append(crossover_and_mutate(pair, crossover_rate, mutation_rate))
-
-
-# def breed_2():
-#     global birds
-#     children_birds = []
-#     parent_birds = sorted(birds, key=get_score, reverse=True)
-#     for x in range(4):
-#         children_birds.append(parent_birds[0])
-#
-#     best = crossover_and_mutate([parent_birds[0], parent_birds[1]])
-#     children_birds.append(best[0])
-#     children_birds.append(best[1])
-#
-#     for x in range(3):
-#         new = crossover_and_mutate(random.sample(parent_birds, 2))
-#         children_birds.append(new[0])
-#         children_birds.append(new[1])
-#
-#     children_birds.append(random.sample(parent_birds, 1))
-#     children_birds.append(random.sample(parent_birds, 1))
-#
-#     birds = children_birds
 
 
 def GA_fun(generation):
@@ -214,7 +189,7 @@ if __name__ == "__main__":
         "-r",
         "--reproduction_rate",
         type=float,
-        default=0.6,
+        default=0.3,
     )
     parser.add_argument(
         "-c",
