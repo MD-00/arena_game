@@ -1,5 +1,6 @@
 import pygame as pg
 import os
+import net
 
 BIRD_IMGS = [pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird1.png"))),
              pg.transform.scale2x(pg.image.load(os.path.join("IMG", "bird2.png"))),
@@ -21,6 +22,21 @@ class Bird:
         self.img_count = 0
         self.img = self.IMGS[0]
         self.tick_count = 0
+        self.net = net.Net()
+        self.score = 0
+        self.is_alive = True
+
+    def revive(self, x, y):
+        self.x = x
+        self.y = y
+        self.tilt = 0
+        self.vel = 0
+        self.height = self.y
+        self.img_count = 0
+        self.img = self.IMGS[0]
+        self.tick_count = 0
+        self.score = 0
+        self.is_alive = True
 
 #jump - metoda odpowiadająca za mechanikę skoku w
 # momencie impulsu sterującego

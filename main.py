@@ -1,14 +1,17 @@
 import pygame as pg
 import setup
 import os
-import neat
 import fps
+import random
+import boto3
 from bird import Bird
 from pipe import Pipe
+from argparse import ArgumentParser
+from datetime import datetime
+import copy
+import pickle
 
-#odkomentowac, zeby dzialalo na serwerze
 # os.environ["SDL_VIDEODRIVER"] = "dummy"
-
 
 highest = 0
 
@@ -23,6 +26,8 @@ pg.display.set_caption(setup.name)
 icon = pg.image.load(os.path.join("IMG", "bird1.png"))
 pg.display.set_icon(icon)
 
+birds = []
+
 #draw_window - funkcja odpowiadająca za wyświetlanie grafiki
 def draw_window(window, birds, pipes, score):
     window.blit(BG_IMG, (0, 0))
@@ -34,31 +39,70 @@ def draw_window(window, birds, pipes, score):
     window.blit(text, (setup.width - 20 - text.get_width(), 10))
 
     for bird in birds:
-        bird.draw(window)
+        if bird.is_alive:
+            bird.draw(window)
     window.blit(fps.update_fps(), (10, 0))
     pg.display.update()
 
-    fps.clock.tick(60)
+    fps.clock.tick(140)
+
+def get_score(e):
+    return e.score
+
+def crossover_and_mutate(birds: tuple, crossover_rate, mutation_rate):
+    bird_1 = copy.copy(birds[0])
+    bird_2 = copy.copy(birds[1])
+
+    new_bird = Bird(230, 350)
 
 
-def fitness_fun(genomes, config):
-    nets = []
-    ge = []
-    birds = []
+    if random.random() < crossover_rate:
+        param_a = random.random()
+        new_bird.net.weights1 = param_a * bird_1.net.weights1 + (1 - param_a) * bird_2.net.weights1
+        new_bird.net.weights2 = param_a * bird_1.net.weights2 + (1 - param_a) * bird_2.net.weights2
+
+    else:
+        new_bird = random.sample((bird_1, bird_2), 1)[0]
+
+    if random.random() < mutation_rate:
+        new_bird = Bird(230, 350)
+
+    return new_bird
 
 
-    for _, g in genomes:
-        net = neat.nn.FeedForwardNetwork.create(g, config)
-        nets.append(net)
-        birds.append(Bird(230, 350))
-        g.fitness = 0
-        ge.append(g)
+def pop_random(lst):
+    idx = random.randrange(0, len(lst))
+    return lst[idx]
+
+def breed(reproduction_rate, crossover_rate, mutation_rate, population):
+    global birds
+    parent_birds = sorted(birds, key=get_score, reverse=True)
+
+    elite_birds = parent_birds[0:int(reproduction_rate * len(parent_birds))]
+    birds = elite_birds
+
+    pairs = []
+    for x in range(population-int(reproduction_rate * len(parent_birds))):
+        rand_1 = pop_random(elite_birds)
+        rand_2 = pop_random(elite_birds)
+        pairs.append((rand_1, rand_2))
+
+    print(pairsgit)
+    for pair in pairs:
+        birds.append(crossover_and_mutate(pair, crossover_rate, mutation_rate))
+
+
+def GA_fun(generation):
+    global birds
 
     pipes = [Pipe(700)]
     score = 0
     clock = pg.time.Clock()
     game_on = True
+
     while game_on:
+
+        alive_birds = any([bird.is_alive for bird in birds])
         clock.tick(60)
         keys_pressed = pg.key.get_pressed()
         for event in pg.event.get():
@@ -68,35 +112,31 @@ def fitness_fun(genomes, config):
                 quit()
 
         pipe_ind = 0
-        if len(birds) > 0:
+        if alive_birds:
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].pipe_top.get_width():
                 pipe_ind = 1
         else:
-            run = False
-            plik = open("log.txt", "at")
-            plik.write(f"{score} ")
-
             break
 
         for x, bird in enumerate(birds):
-            bird.move()
-            ge[x].fitness += 0.1
-            output = nets[x].activate(
-                (bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
-            if output[0] > 0.5:
-                bird.jump()
+            if bird.is_alive:
+                bird.move()
+                birds[x].score += 0.1
+                output = bird.net.eval(abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom))
+
+                if output > 0.5:
+                    bird.jump()
 
         add_pipe = False
         rem = []
         for pipe in pipes:
             for x, bird in enumerate(birds):
-                if pipe.collide(bird):
-                    ge[x].fitness -= 1
-                    birds.pop(x)
-                    nets.pop(x)
-                    ge.pop(x)
+                if pipe.collide(bird) and bird.is_alive:
+                    birds[x].score -= 1
+                    bird.is_alive = False
+                    alive_birds -= 1
 
-                if not pipe.passed and pipe.x < bird.x:
+                if not pipe.passed and pipe.x < bird.x and bird.is_alive:
                     pipe.passed = True
                     add_pipe = True
             if pipe.x + pipe.pipe_top.get_width() < 0:
@@ -109,45 +149,123 @@ def fitness_fun(genomes, config):
             score += 1
             if score > highest:
                 highest = score
-            for g in ge:
-                g.fitness += 5
+            for bird in birds:
+                if bird.is_alive:
+                    bird.score += 5
 
-            if len(ge):
-                varx = int(max(x.fitness for x in ge))
-                print(f"Score: {score} fitness: {varx} highest score: {highest} ")
+            if alive_birds:
+                varx = int(max(x.score for x in birds))
             pipes.append(Pipe(600))
 
         for r in rem:
             pipes.remove(r)
         for x, bird in enumerate(birds):
-            if bird.y + bird.img.get_height() >= setup.height or bird.y < 0:
-                ge[x].fitness -= 1
-                birds.pop(x)
-                nets.pop(x)
-                ge.pop(x)
+            if (bird.y + bird.img.get_height() >= setup.height or bird.y < 0) and bird.is_alive:
+                birds[x].score -= 1
+                bird.is_alive = False
+                alive_birds-=1
 
         draw_window(screen, birds, pipes, score)
 
-#run - główna pętla programu
-def run(config_path):
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
-                                neat.DefaultStagnation, config_path)
+    max_fitness = max(x.score for x in birds)
+    average_fitness = sum(x.score for x in birds) / len(birds)
+    f.write(f"{generation}, {max_fitness}, {average_fitness}, {score}\n")
+    print(f"Generation: {generation}, max fitness: {max_fitness}, avg fitness: {average_fitness}, score: {score}")
 
-    population = neat.Population(config)
-    population.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    population.add_reporter(stats)
+def revive():
+    for bird in birds:
+        bird.revive(230, 350)
 
-    winner = population.run(fitness_fun, 5000)
-    print('\nBest genome:\n{!s}'.format(winner))
 
 if __name__ == "__main__":
-    xd = open("log.txt", "wt")
-    xd.write("")
-    xd.close()
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, "neatconfig.txt")
-    run(config_path)
+    parser = ArgumentParser()
+    parser.add_argument(
+        "-p",
+        "--population",
+        type=int,
+        default=10,
+    )
+    parser.add_argument(
+        "-r",
+        "--reproduction_rate",
+        type=float,
+        default=0.3,
+    )
+    parser.add_argument(
+        "-c",
+        "--crossover_rate",
+        type=float,
+        default=0.7,
+    )
+    parser.add_argument(
+        "-m",
+        "--mutation_rate",
+        type=float,
+        default=0.1,
+    )
+    parser.add_argument(
+        "-g",
+        "--generations",
+        type=int,
+        default=5,
+    )
+    parser.add_argument(
+        "-a",
+        "--access",
+        type=str,
+    )
+    parser.add_argument(
+        "-k",
+        "--key",
+        type=str,
+    )
+
+    args = parser.parse_args()
+
+    population = args.population
+    reproduction_rate = args.reproduction_rate
+    crossover_rate = args.crossover_rate
+    mutation_rate = args.mutation_rate
+    generations = args.generations
+    access = args.access
+    key = args.key
+    print(f'Population: {population}, reproduction: {reproduction_rate}, crossover: {crossover_rate}, mutation: {mutation_rate}, generations: {generations}')
 
 
+    for x in range(population):
+        birds.append(Bird(230, 350))
 
+    nets = list()
+    with open('start-nets.pickle', 'rb') as handle:
+        nets = pickle.load(handle)
+
+    for i in range(len(birds)):
+        birds[i].net = nets[i]
+
+    f = open("results.txt", "w")
+    f.write(f'Population: {population}, reproduction: {reproduction_rate}, crossover: {crossover_rate}, mutation: {mutation_rate}, generations: {generations}\n')
+    f.write(f"generation, max_fitness, average_fitness, score\n")
+    for generation in range(generations):
+        GA_fun(generation)
+        breed(reproduction_rate, crossover_rate, mutation_rate, population)
+        revive()
+
+    f.close()
+
+    with open('save-data.pickle', 'wb') as handle:
+        pickle.dump(nets, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y-H%H-M%M-S%S")
+
+    s3=boto3.client('s3', aws_access_key_id=access, aws_secret_access_key=key, region_name="us-east-1")
+    # s3.upload_file(
+    #     Filename="results.txt",
+    #     Bucket="ag-data-flappy-bird",
+    #     Key=f'results/p{population}-r{int(reproduction_rate*100)}-c{int(crossover_rate*100)}-m{int(mutation_rate*100)}-g{generations}.txt',
+    # )
+    # s3.upload_file(
+    #     Filename="save-data.pickle",
+    #     Bucket="ag-data-flappy-bird",
+    #     Key=f'pickles/p{population}-r{int(reproduction_rate*100)}-c{int(crossover_rate*100)}-m{int(mutation_rate*100)}-g{generations}.pickle',
+    # )
